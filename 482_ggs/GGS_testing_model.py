@@ -15,7 +15,7 @@ options = GestureRecognizerOptions(
     running_mode=VisionRunningMode.IMAGE
 )
 
-gesture_recognizer = GestureRecognizer.create_from_options(options)
+recognizer = GestureRecognizer.create_from_options(options)
 
 # Initialize the video capture
 cap = cv2.VideoCapture(2)
@@ -32,14 +32,20 @@ while cap.isOpened():
     mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=image)
     
     # Perform gesture recognition
-    result = gesture_recognizer.recognize(mp_image)
-    print(result.gestures)
+    result = recognizer.recognize(mp_image)
 
-    # Draw the recognized gesture on the frame
-    #if result.gestures:
-        #for gesture in result.gestures:
-            #gesture_name = gesture.
-            #cv2.putText(frame, gesture_name, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
+    for i, gesture in enumerate(result.gestures):
+        # Get the top gesture from the recognition result
+        print("Top Gesture Result: ", gesture[0].category_name)
+
+    if result.hand_landmarks:
+        # Obtain hand landmarks from MediaPipe
+        hand_landmarks = result.hand_landmarks
+        #print("Hand Landmarks: " + str(hand_landmarks))
+
+        # Obtain hand connections from MediaPipe
+        mp_hands_connections = mp.solutions.hands.HAND_CONNECTIONS
+        #print("Hand Connections: " + str(mp_hands_connections))
 
     # Display the frame
     cv2.imshow('Gesture Recognition', frame)
