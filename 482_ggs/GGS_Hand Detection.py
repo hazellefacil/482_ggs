@@ -1,6 +1,8 @@
 import cv2
 import mediapipe as mp
+import os
 from google.protobuf.json_format import MessageToDict
+import matplotlib.pyplot as plt
 
 # Initialize MediaPipe hands module
 mpHands = mp.solutions.hands
