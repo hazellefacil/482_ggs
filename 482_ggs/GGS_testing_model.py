@@ -48,9 +48,11 @@ while cap.isOpened():
 
     for i, gesture in enumerate(result.gestures):
         # Get the top gesture from the recognition result
-        print("Top Gesture Result: ", gesture[0].category_name)
+        #print("Top Gesture Result: ", gesture[0].category_name)
         gesture_name = gesture[0].category_name
         cv2.putText(frame, gesture_name, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
+        #communicate to the socket
+        conn.sendall(gesture[0].category_name)
 
     if result.hand_landmarks:
         # Obtain hand landmarks from MediaPipe
@@ -61,10 +63,6 @@ while cap.isOpened():
         mp_hands_connections = mp.solutions.hands.HAND_CONNECTIONS
         #print("Hand Connections: " + str(mp_hands_connections))
         
-
-    #communicate gesture via socket
-    conn.sendall(gesture[0].category_name)
-
     # Display the frame
     cv2.imshow('Gesture Recognition', frame)
     
