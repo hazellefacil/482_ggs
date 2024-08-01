@@ -38,13 +38,11 @@ public class gungun_actions : MonoBehaviour
 
     void ProcessGesture(string gesture)
     {
-        if (gesture == nextAction)
+        if (gesture == nextAction || gesture == "block" || nextAction == "block")
         {
             Debug.Log("draw");
         }
-        else if ((gesture == "Rock" && nextAction == "Scissors") ||
-                 (gesture == "Paper" && nextAction == "Rock") ||
-                 (gesture == "Scissors" && nextAction == "Paper"))
+        else if (gesture == "shoot" && nextAction == "reload")
         {
             Debug.Log("User Wins");
         }
