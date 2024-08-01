@@ -52,7 +52,7 @@ while cap.isOpened():
         gesture_name = gesture[0].category_name
         cv2.putText(frame, gesture_name, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
         #communicate to the socket
-        conn.sendall(gesture[0].category_name)
+        conn.sendall(gesture_name.encode())
 
     if result.hand_landmarks:
         # Obtain hand landmarks from MediaPipe
