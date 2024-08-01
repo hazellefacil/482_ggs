@@ -1,5 +1,6 @@
 import mediapipe as mp
 import cv2
+import socket
 
 # Path to your custom gesture recognizer model
 model_path = 'gesture_recognizer.task'
@@ -16,6 +17,17 @@ options = GestureRecognizerOptions(
 )
 
 recognizer = GestureRecognizer.create_from_options(options)
+
+
+# Set up socket server
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server_socket.bind(('localhost', 65432))
+server_socket.listen()
+
+print("Waiting for connection...")
+conn, addr = server_socket.accept()
+print('Connected by', addr)
+
 
 # Initialize the video capture
 cap = cv2.VideoCapture(2)
@@ -49,6 +61,9 @@ while cap.isOpened():
         mp_hands_connections = mp.solutions.hands.HAND_CONNECTIONS
         #print("Hand Connections: " + str(mp_hands_connections))
         
+
+    #communicate gesture via socket
+    conn.sendall(gesture[0].category_name)
 
     # Display the frame
     cv2.imshow('Gesture Recognition', frame)
