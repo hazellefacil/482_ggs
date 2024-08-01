@@ -10,6 +10,7 @@ public class gungun_actions : MonoBehaviour
     // Start is called before the first frame update
     private Animator mAnimator;
     private int currentAction; 
+    private string nextAction;
     private string[] actions = {"block","reload","shoot"};
     private string idleAnimation = "idle";
     TcpClient client;
@@ -37,7 +38,20 @@ public class gungun_actions : MonoBehaviour
 
     void ProcessGesture(string gesture)
     {
-        Debug.Log(gesture);
+        if (gesture == nextAction)
+        {
+            Debug.Log("draw");
+        }
+        else if ((gesture == "Rock" && nextAction == "Scissors") ||
+                 (gesture == "Paper" && nextAction == "Rock") ||
+                 (gesture == "Scissors" && nextAction == "Paper"))
+        {
+            Debug.Log("User Wins");
+        }
+        else
+        {
+            Debug.Log("Computer Wins");
+        }
     }
 
     void UpdateAction()
@@ -45,11 +59,11 @@ public class gungun_actions : MonoBehaviour
         int newAnimationIndex; 
         do
         {
-            newAnimationIndex = Random.Range(0,actions.Length); 
+            newAnimationIndex = UnityEngine.Random.Range(0,actions.Length); 
         } while (newAnimationIndex == currentAction);
         currentAction = newAnimationIndex; 
-        string chosenAction = actions[currentAction]; 
-        mAnimator.Play(chosenAction); 
+        nextAction = actions[currentAction]; 
+        mAnimator.Play(nextAction); 
         float animationLength = mAnimator.GetCurrentAnimatorStateInfo(0).length;
         Invoke(nameof(ReturnToIdle), animationLength);
     }
