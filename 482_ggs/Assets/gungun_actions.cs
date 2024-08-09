@@ -7,7 +7,6 @@ using System.Text;
 
 public class gungun_actions : MonoBehaviour
 {
-    // Start is called before the first frame update
     private Animator mAnimator;
     private int currentAction; 
     private string nextAction;
@@ -19,40 +18,60 @@ public class gungun_actions : MonoBehaviour
     private int computerReload;
     private int userReload;
 
+    private float actionTimer;
+    private float interval = 10f; // 10-second interval
+
+    private string pendingGesture;
+
     void Start()
     {
         client = new TcpClient("localhost", 65432);
         stream = client.GetStream();
         mAnimator = GetComponent<Animator>();
         mAnimator.Play(idleAnimation); 
-        Invoke(nameof(UpdateAction), 1f);
         computerReload = 0;
         userReload = 0;
+        actionTimer = 0f;
+        pendingGesture = null; // Store the gesture until the timer elapses
     }
 
     void Update()
     {
+        actionTimer += Time.deltaTime;
+
         if (stream.DataAvailable)
         {
             byte[] data = new byte[256];
             int bytesRead = stream.Read(data, 0, data.Length);
             string gesture = Encoding.ASCII.GetString(data, 0, bytesRead).Trim();
-            ProcessGesture(gesture);
+            pendingGesture = gesture; // Save the gesture but don't process it immediately
+        }
+
+        if (actionTimer >= interval)
+        {
+            // Process the gesture and update the action after the 10-second interval
+            if (pendingGesture != null)
+            {
+                ProcessGesture(pendingGesture);
+                pendingGesture = null; // Reset after processing
+            }
+
+            UpdateAction(); // Update the computer's action
+            actionTimer = 0f; // Reset the timer
         }
     }
 
     void ProcessGesture(string gesture)
     {
-
-        if ((userReload == 1) && (gesture == "shoot") && (nextAction == "reload"))
+        if ((userReload == 1) && (gesture == "shoot"))
         {
-            Debug.Log("user wins");
+            Debug.Log("User wins");
             userReload = 0;
             computerReload = 0;
         }
         else if ((computerReload == 1) && (nextAction == "shoot") && gesture == "reload")
         {
-            Debug.Log("computer wins");
+            Debug.Log("Computer wins");
             userReload = 0;
             computerReload = 0;
         }
@@ -64,18 +83,22 @@ public class gungun_actions : MonoBehaviour
         }
         else if (gesture == "reload")
         {
+            Debug.Log("Player Reload");
             userReload = 1;
         }
         else if (nextAction == "reload")
         {
+            Debug.Log("Computer Reload");
             computerReload = 1;
         }
         else if (nextAction == "shoot")
         {
+            Debug.Log("Computer Shoot");
             computerReload = 0;
         }
         else if (gesture == "shoot")
         {
+            Debug.Log("Player Shoot");
             userReload = 0;
         }
     }
@@ -97,7 +120,5 @@ public class gungun_actions : MonoBehaviour
     void ReturnToIdle()
     {
         mAnimator.Play(idleAnimation); 
-        Invoke(nameof(UpdateAction), 1f);
     }
-
 }
