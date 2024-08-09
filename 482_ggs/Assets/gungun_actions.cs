@@ -16,6 +16,9 @@ public class gungun_actions : MonoBehaviour
     TcpClient client;
     NetworkStream stream;
 
+    private int computerReload;
+    private int userReload;
+
     void Start()
     {
         client = new TcpClient("localhost", 65432);
@@ -23,6 +26,8 @@ public class gungun_actions : MonoBehaviour
         mAnimator = GetComponent<Animator>();
         mAnimator.Play(idleAnimation); 
         Invoke(nameof(UpdateAction), 1f);
+        computerReload = 0;
+        userReload = 0;
     }
 
     void Update()
@@ -40,15 +45,15 @@ public class gungun_actions : MonoBehaviour
     {
         if (gesture == nextAction || gesture == "block" || nextAction == "block")
         {
-            Debug.Log("draw");
+            computerReload = 1;
         }
         else if (gesture == "shoot" && nextAction == "reload")
         {
-            Debug.Log("User Wins");
+            computerReload = 0;
         }
-        else
+        else if (gesture == "shoot")
         {
-            Debug.Log("Computer Wins");
+            userReload = 0;
         }
     }
 
