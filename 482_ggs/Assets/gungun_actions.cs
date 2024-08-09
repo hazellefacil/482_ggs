@@ -43,11 +43,34 @@ public class gungun_actions : MonoBehaviour
 
     void ProcessGesture(string gesture)
     {
-        if (gesture == nextAction || gesture == "block" || nextAction == "block")
+
+        if ((userReload == 1) && (gesture == "shoot") && (nextAction == "reload"))
+        {
+            Debug.Log("user wins");
+            userReload = 0;
+            computerReload = 0;
+        }
+        else if ((computerReload == 1) && (nextAction == "shoot") && gesture == "reload")
+        {
+            Debug.Log("computer wins");
+            userReload = 0;
+            computerReload = 0;
+        }
+        else if ((userReload == 1) && (gesture == "shoot") && (nextAction == "shoot") && (computerReload == 1))
+        {
+            Debug.Log("Draw");
+            userReload = 0;
+            computerReload = 0;
+        }
+        else if (gesture == "reload")
+        {
+            userReload = 1;
+        }
+        else if (nextAction == "reload")
         {
             computerReload = 1;
         }
-        else if (gesture == "shoot" && nextAction == "reload")
+        else if (nextAction == "shoot")
         {
             computerReload = 0;
         }

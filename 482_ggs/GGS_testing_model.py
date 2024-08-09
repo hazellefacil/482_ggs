@@ -20,7 +20,7 @@ options = GestureRecognizerOptions(
 recognizer = GestureRecognizer.create_from_options(options)
 
 # Set up socket server
-'''
+
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.bind(('localhost', 65432))
 server_socket.listen()
@@ -28,7 +28,7 @@ server_socket.listen()
 print("Waiting for connection...")
 conn, addr = server_socket.accept()
 print('Connected by', addr)
-'''
+
 
 # Initialize the video capture
 cap = cv2.VideoCapture(2)
@@ -68,7 +68,7 @@ while cap.isOpened():
         cv2.putText(frame, display_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
 
         # Communicate to the socket
-        # conn.sendall(top_gesture_name.encode())
+        conn.sendall(top_gesture_name.encode())
 
     if result.hand_landmarks:
         # Obtain hand landmarks from MediaPipe
