@@ -56,7 +56,7 @@ public class tester_actions : MonoBehaviour
                 stream.Write(readyResponse, 0, readyResponse.Length);
 
                 // Start the 5-second countdown
-                yield return StartCoroutine(StartCountdown(5));
+                yield return StartCoroutine(StartCountdown(10));
 
                 // Update the computer's action
                 UpdateAction();
@@ -92,6 +92,85 @@ public class tester_actions : MonoBehaviour
 
     void ProcessGesture(string gesture)
     {
+        if(gesture == "reload"){
+            userReload = true;
+            if(nextAction == "reload"){
+                computerReload = true;
+            }
+            else if(nextAction == "shoot"){
+                if(computerReload == true){
+                    Debug.Log("Computer wins!");
+                    gameContinues = false;
+                    mAnimator.SetBool("gameContinues", false);
+                }
+                else{
+                    Debug.Log("Computer miss!");
+                }
+            }
+
+            else if(nextAction == "block"){
+                Debug.Log("Draw!");
+            }
+        }
+
+        else if(gesture == "shoot"){
+            if(nextAction == "reload"){
+                if(userReload == true){
+                    Debug.Log("User wins");
+                    gameContinues = false;
+                    mAnimator.SetBool("gameContinues", false);
+                }
+                else{
+                    Debug.Log("Player miss!");
+                }
+            }
+            else if(nextAction == "shoot"){   
+                if(userReload == true){
+                    if(computerReload == true){
+                        Debug.Log("Draw!");
+                        gameContinues = false;
+                        mAnimator.SetBool("gameContinues", false);
+                    }
+                    else{
+                        Debug.Log("User wins - computer has no ammo!");
+                        gameContinues = false;
+                        mAnimator.SetBool("gameContinues", false);
+                    }
+                }
+
+                else if(userReload == false){
+                    if(computerReload == true){
+                        Debug.Log("Computer wins - user has no ammo!");
+                        gameContinues = false;
+                        mAnimator.SetBool("gameContinues", false);
+                    }
+                    else{
+                        Debug.Log("Draw!");
+                        gameContinues = false;
+                        mAnimator.SetBool("gameContinues", false);
+                    }
+                }
+            }
+            else if(nextAction == "block"){
+                Debug.Log("User was blocked by the computer! Reload Again!");
+                userReload = false;
+            }
+        }
+        // autodefaulted none = block!
+        else if(gesture == "block" || gesture == "none"){
+            if(nextAction == "reload"){
+                computerReload = true;
+            }
+            else if(nextAction == "shoot"){
+                Debug.Log("Computer was blocked by the user!");
+                computerReload = false;
+            }
+            else if(nextAction == "block"){
+                
+            }
+            
+        }
+        /*
         // check reloads regardless
         if (nextAction == "reload")
         {
@@ -138,7 +217,7 @@ public class tester_actions : MonoBehaviour
             Debug.Log("user wins");
             gameContinues = false;
             mAnimator.SetBool("gameContinues", false);
-        }
+        }*/
     }
     void UpdateAction()
     {
