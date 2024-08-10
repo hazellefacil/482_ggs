@@ -1,5 +1,6 @@
 import mediapipe as mp
 import cv2
+import numpy as np
 import socket
 
 # Path to your custom gesture recognizer model
@@ -19,6 +20,17 @@ options = GestureRecognizerOptions(
 recognizer = GestureRecognizer.create_from_options(options)
 
 
+# Initialize the video capture
+cap = cv2.VideoCapture(2)
+
+def softmax(x):
+    e_x = np.exp(x - np.max(x))
+    return e_x / e_x.sum()
+
+while not cap.isOpened():
+    print("Waiting for the camera to open...")
+    time.sleep(0.1)
+
 # Set up socket server
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.bind(('localhost', 65432))
@@ -28,9 +40,9 @@ print("Waiting for connection...")
 conn, addr = server_socket.accept()
 print('Connected by', addr)
 
+capOpened = "1"
+conn.sendall(capOpened.encode())
 
-# Initialize the video capture
-cap = cv2.VideoCapture(2)
 
 while cap.isOpened():
     ret, frame = cap.read()
@@ -46,13 +58,24 @@ while cap.isOpened():
     # Perform gesture recognition
     result = recognizer.recognize(mp_image)
 
-    for i, gesture in enumerate(result.gestures):
-        # Get the top gesture from the recognition result
-        #print("Top Gesture Result: ", gesture[0].category_name)
-        gesture_name = gesture[0].category_name
-        cv2.putText(frame, gesture_name, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
-        #communicate to the socket
-        conn.sendall(gesture_name.encode())
+    if result.gestures:
+        # Extract the logits or confidence scores
+        gesture_scores = [gesture[0].score for gesture in result.gestures]
+
+        # Apply softmax to get probabilities
+        gesture_probabilities = softmax(gesture_scores)
+
+        # Get the gesture with the highest probability
+        top_gesture_index = np.argmax(gesture_probabilities)
+        top_gesture_name = result.gestures[top_gesture_index][0].category_name
+        top_gesture_prob = gesture_probabilities[top_gesture_index]
+
+        # Display the top gesture and its probability on the frame
+        display_text = f"{top_gesture_name}: {top_gesture_prob:.2f}"
+        cv2.putText(frame, display_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
+
+        # Communicate to the socket
+        conn.sendall(top_gesture_name.encode())
 
     if result.hand_landmarks:
         # Obtain hand landmarks from MediaPipe
