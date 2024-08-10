@@ -14,26 +14,31 @@ conn, addr = server_socket.accept()
 print('Connected by', addr)
 
 # send the gesture
-gesture_name = gestures[curr]
-conn.sendall(gesture_name.encode())
+for i in range (20):
+    gesture_name = gestures[curr]
+    conn.sendall(gesture_name.encode())
 
-# Wait for Unity's "ready" signal
-data = conn.recv(1024)
-if data.decode() == "ready":
-    print("Unity is ready. Starting 5-second countdown...")
-    
-    # Start the 5-second countdown
-    for i in range(5, 0, -1):
-        print(f"Revealing actions in {i} seconds...")
-        time.sleep(1)
-
-    # After countdown, reveal the gesture
-    print(f"You chose {gesture_name}")
-    
-    # Wait to receive and display Unity's move
+    # Wait for Unity's "ready" signal
     data = conn.recv(1024)
-    computer_move = data.decode()
-    print(f"Computer chose {computer_move}")
+    if data.decode() == "ready":
+        print("Unity is ready. Starting 5-second countdown...")
+        
+        # Start the 5-second countdown
+        for i in range(5, 0, -1):
+            print(f"Revealing actions in {i} seconds...")
+            time.sleep(1)
+
+        # After countdown, reveal the gesture
+        print(f"You chose {gesture_name}")
+        
+        # Wait to receive and display Unity's move
+        data = conn.recv(1024)
+        computer_move = data.decode()
+        print(f"Computer chose {computer_move}")
+    curr += 1
+
+    if (curr > 2):
+        curr = 0
 
 # Close the connection
 conn.close()
