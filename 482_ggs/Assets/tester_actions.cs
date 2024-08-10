@@ -26,6 +26,7 @@ public class tester_actions : MonoBehaviour
         stream = client.GetStream();
         mAnimator = GetComponent<Animator>();
         mAnimator.Play(idleAnimation); 
+        mAnimator.SetBool("gameContinues", true);
         gameContinues = true;
 
         // Wait for the gesture from Python
@@ -56,6 +57,12 @@ public class tester_actions : MonoBehaviour
                 UpdateAction();
                 ProcessGesture(gesture);
 
+                // If the game has ended, break out of the loop
+                if (!gameContinues)
+                {
+                    mAnimator.SetBool("gameContinues", false);
+                    break;
+                }
                 // Send the computer's move back to Python
                 byte[] moveResponse = Encoding.ASCII.GetBytes(nextAction);
                 stream.Write(moveResponse, 0, moveResponse.Length);
@@ -64,6 +71,9 @@ public class tester_actions : MonoBehaviour
 
             yield return null;
         }
+        mAnimator.SetBool("gameContinues", false);
+        mAnimator.Play(idleAnimation);
+        Debug.Log("Game over.");
     }
 
     IEnumerator StartCountdown(int seconds)
@@ -98,6 +108,7 @@ public class tester_actions : MonoBehaviour
             {
                 Debug.Log("user wins");
                 gameContinues = false;
+                mAnimator.SetBool("gameContinues", false);
             }
             else
             {
@@ -110,6 +121,7 @@ public class tester_actions : MonoBehaviour
             {
                 Debug.Log("computer wins");
                 gameContinues = false;
+                mAnimator.SetBool("gameContinues", false);
             }
             else
             {
@@ -118,8 +130,9 @@ public class tester_actions : MonoBehaviour
         }
         else if (gesture == "shoot")
         {
-            Debug.Log("computer wins");
+            Debug.Log("user wins");
             gameContinues = false;
+            mAnimator.SetBool("gameContinues", false);
         }
     }
     void UpdateAction()
