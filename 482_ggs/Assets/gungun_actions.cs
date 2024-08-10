@@ -15,11 +15,13 @@ public class gungun_actions : MonoBehaviour
     TcpClient client;
     NetworkStream stream;
 
-    private int computerReload;
-    private int userReload;
+    private int computerReload; //ammo count for computer
+    private int userReload; //ammo count for user
 
     private float actionTimer;
     private float interval = 10f; // 10-second interval
+
+    private float animationLength = 10f;
 
     private string pendingGesture;
 
@@ -27,12 +29,20 @@ public class gungun_actions : MonoBehaviour
     {
         client = new TcpClient("localhost", 65432);
         stream = client.GetStream();
-        mAnimator = GetComponent<Animator>();
-        mAnimator.Play(idleAnimation); 
-        computerReload = 0;
-        userReload = 0;
-        actionTimer = 0f;
-        pendingGesture = null; // Store the gesture until the timer elapses
+
+        byte[] data = new byte[256];
+        int bytesRead = stream.Read(data, 0, data.Length);
+        string capOpenedFlag = Encoding.ASCII.GetString(data, 0, bytesRead).Trim();
+
+        if (capOpenedFlag == "1")
+        {
+            mAnimator = GetComponent<Animator>();
+            mAnimator.Play(idleAnimation); 
+            computerReload = 0;
+            userReload = 0;
+            actionTimer = 0f;
+            pendingGesture = null; // Store the gesture until the timer elapses
+        }
     }
 
     void Update()
@@ -46,12 +56,14 @@ public class gungun_actions : MonoBehaviour
             string gesture = Encoding.ASCII.GetString(data, 0, bytesRead).Trim();
             pendingGesture = gesture; // Save the gesture but don't process it immediately
         }
+        
 
         if (actionTimer >= interval)
         {
             // Process the gesture and update the action after the 10-second interval
             if (pendingGesture != null)
             {
+                Debug.Log("pendingGesture: " + pendingGesture);
                 ProcessGesture(pendingGesture);
                 pendingGesture = null; // Reset after processing
             }
@@ -65,7 +77,7 @@ public class gungun_actions : MonoBehaviour
     {
         if ((userReload == 1) && (gesture == "shoot"))
         {
-            Debug.Log("User wins");
+            Debug.Log("Player wins");
             userReload = 0;
             computerReload = 0;
         }
@@ -77,41 +89,56 @@ public class gungun_actions : MonoBehaviour
         }
         else if ((userReload == 1) && (gesture == "shoot") && (nextAction == "shoot") && (computerReload == 1))
         {
-            Debug.Log("Draw");
+            Debug.Log("Draw - Keep Going!");
             userReload = 0;
             computerReload = 0;
         }
-        else if (gesture == "reload")
+        if (gesture == "reload")
         {
             Debug.Log("Player Reload");
+            if(userReload == 1){
+                Debug.Log("Player Already Has Ammo!");
+            }
             userReload = 1;
         }
-        else if (nextAction == "reload")
+        if (nextAction == "reload")
         {
             Debug.Log("Computer Reload");
+            if(computerReload == 1){
+                Debug.Log("Computer Already Has Ammo!");
+            }
             computerReload = 1;
         }
-        else if (nextAction == "shoot")
+        if (nextAction == "shoot")
         {
-            Debug.Log("Computer Shoot");
+            Debug.Log("Computer Shoots");
+            if(computerReload == 0){
+                Debug.Log("Computer Shoots Nothing - Must Reload Again!");
+            }
             computerReload = 0;
         }
-        else if (gesture == "shoot")
+        if (gesture == "shoot")
         {
-            Debug.Log("Player Shoot");
+            Debug.Log("Player Shoots");
+            if(computerReload == 0){
+                Debug.Log("Player Shoots Nothing - Must Reload Again!");
+            }
             userReload = 0;
         }
     }
 
     void UpdateAction()
     {
+        Debug.Log("Updating Action");
         int newAnimationIndex; 
         do
         {
             newAnimationIndex = UnityEngine.Random.Range(0,actions.Length); 
+            Debug.Log("Choosing animation index");
         } while (newAnimationIndex == currentAction);
         currentAction = newAnimationIndex; 
         nextAction = actions[currentAction]; 
+        Debug.Log("Current action is: " + actions[currentAction]);
         mAnimator.Play(nextAction); 
         float animationLength = mAnimator.GetCurrentAnimatorStateInfo(0).length;
         Invoke(nameof(ReturnToIdle), animationLength);

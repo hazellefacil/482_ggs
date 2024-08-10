@@ -19,8 +19,19 @@ options = GestureRecognizerOptions(
 
 recognizer = GestureRecognizer.create_from_options(options)
 
-# Set up socket server
 
+# Initialize the video capture
+cap = cv2.VideoCapture(2)
+
+def softmax(x):
+    e_x = np.exp(x - np.max(x))
+    return e_x / e_x.sum()
+
+while not cap.isOpened():
+    print("Waiting for the camera to open...")
+    time.sleep(0.1)
+
+# Set up socket server
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.bind(('localhost', 65432))
 server_socket.listen()
@@ -29,13 +40,9 @@ print("Waiting for connection...")
 conn, addr = server_socket.accept()
 print('Connected by', addr)
 
+capOpened = "1"
+conn.sendall(capOpened.encode())
 
-# Initialize the video capture
-cap = cv2.VideoCapture(2)
-
-def softmax(x):
-    e_x = np.exp(x - np.max(x))
-    return e_x / e_x.sum()
 
 while cap.isOpened():
     ret, frame = cap.read()
