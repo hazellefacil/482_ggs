@@ -1,0 +1,29 @@
+[33m2ca8d9a[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m)[m time synch
+[33med67bc2[m first attempt
+[33m291136a[m Merge branch 'main' of https://github.com/hazellefacil/482_ggs
+[33m8d8e1e8[m game logic to test
+[33ma77e1df[m working socket with unity and user choice detection
+[33m1bb80cf[m Merge branch 'main' of https://github.com/hazellefacil/482_ggs
+[33m4cdbb12[m basic game logic
+[33mc9d6921[m changed socket send
+[33ma572d03[m changed socket send
+[33m74cc6ff[m preliminary socket testing code
+[33m4d420a3[m feat: socket set up
+[33m45b1a26[m Merge branch 'main' of https://github.com/hazellefacil/482_ggs
+[33m75e786c[m feat: randomized game movements
+[33m995242e[m moving the noetbook file
+[33m1951f84[m Merge pull request #1 from hazellefacil/tonys-branch
+[33maa4f37c[m[33m ([m[1;31morigin/tonys-branch[m[33m)[m added shoot overlay
+[33m5a3a556[m Created using Colab
+[33m7d941ed[m Working shoot detection!
+[33m2c1f113[m Started testing a model
+[33m4507c90[m Merge branch 'tonys-branch' of https://github.com/hazellefacil/482_ggs into tonys-branch
+[33m08371cb[m Land mark detection code revised
+[33ma2a54b0[m Added jupyter notebook to reqs file
+[33m52c3ce7[m Done writing the loading data logic for training CNN
+[33mca7cec2[m updated jupyter
+[33m4e3b7ae[m Jupyter Notebook for CNN Classification
+[33m561fc6d[m dependencies required to run the code thus far
+[33md16c61c[m Got a rough hand detection script working atm
+[33m82697c0[m feat: game setup
+[33m484a9c4[m Initial commit

@@ -2,6 +2,7 @@ import mediapipe as mp
 import cv2
 import numpy as np
 import socket
+import time
 
 # Path to your custom gesture recognizer model
 model_path = 'gesture_recognizer.task'
@@ -76,6 +77,23 @@ while cap.isOpened():
 
         # Communicate to the socket
         conn.sendall(top_gesture_name.encode())
+        # Wait for Unity's "ready" signal
+        data = conn.recv(1024)
+        if data.decode() == "ready":
+            print("Unity is ready. Starting 5-second countdown...")
+            
+            # Start the 5-second countdown
+            for i in range(10, 0, -1):
+                print(f"Revealing actions in {i} seconds...")
+                time.sleep(1)
+
+            # After countdown, reveal the gesture
+            print(f"You chose {top_gesture_name}")
+            
+            # Wait to receive and display Unity's move
+            data = conn.recv(1024)
+            computer_move = data.decode()
+            print(f"Computer chose {computer_move}")
 
     if result.hand_landmarks:
         # Obtain hand landmarks from MediaPipe
