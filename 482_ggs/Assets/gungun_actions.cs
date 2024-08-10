@@ -5,147 +5,162 @@ using System;
 using System.Net.Sockets;
 using System.Text;
 
-public class gungun_actions : MonoBehaviour
+public class tester_actions : MonoBehaviour
 {
+
     private Animator mAnimator;
     private int currentAction; 
     private string nextAction;
-    private string[] actions = {"block","reload","shoot"};
+    private string[] actions = { "block", "reload", "shoot" };
     private string idleAnimation = "idle";
     TcpClient client;
     NetworkStream stream;
+    private bool computerReload = false;
+    private bool userReload = false;
 
-    private int computerReload; //ammo count for computer
-    private int userReload; //ammo count for user
-
-    private float actionTimer;
-    private float interval = 10f; // 10-second interval
-
-    private float animationLength = 10f;
-
-    private string pendingGesture;
+    private bool gameContinues;
 
     void Start()
     {
         client = new TcpClient("localhost", 65432);
         stream = client.GetStream();
-
         byte[] data = new byte[256];
         int bytesRead = stream.Read(data, 0, data.Length);
         string capOpenedFlag = Encoding.ASCII.GetString(data, 0, bytesRead).Trim();
-
         if (capOpenedFlag == "1")
         {
             mAnimator = GetComponent<Animator>();
             mAnimator.Play(idleAnimation); 
-            computerReload = 0;
-            userReload = 0;
-            actionTimer = 0f;
-            pendingGesture = null; // Store the gesture until the timer elapses
+            mAnimator.SetBool("gameContinues", true);
+            gameContinues = true;
+            // Wait for the gesture from Python
+            StartCoroutine(WaitForGesture());
         }
     }
-
-    void Update()
+    
+    IEnumerator WaitForGesture()
     {
-        actionTimer += Time.deltaTime;
-
-        if (stream.DataAvailable)
+        while (gameContinues)
         {
-            byte[] data = new byte[256];
-            int bytesRead = stream.Read(data, 0, data.Length);
-            string gesture = Encoding.ASCII.GetString(data, 0, bytesRead).Trim();
-            pendingGesture = gesture; // Save the gesture but don't process it immediately
-        }
-        
-
-        if (actionTimer >= interval)
-        {
-            // Process the gesture and update the action after the 10-second interval
-            if (pendingGesture != null)
+            if (gameContinues == false){
+                mAnimator.Play(idleAnimation); 
+            }
+            else if (stream.DataAvailable)
             {
-                Debug.Log("pendingGesture: " + pendingGesture);
-                ProcessGesture(pendingGesture);
-                pendingGesture = null; // Reset after processing
+                byte[] data = new byte[256];
+                int bytesRead = stream.Read(data, 0, data.Length);
+                string gesture = Encoding.ASCII.GetString(data, 0, bytesRead).Trim();
+
+                // Send "ready" signal back to Python
+                byte[] readyResponse = Encoding.ASCII.GetBytes("ready");
+                stream.Write(readyResponse, 0, readyResponse.Length);
+
+                // Start the 5-second countdown
+                yield return StartCoroutine(StartCountdown(5));
+
+                // Update the computer's action
+                UpdateAction();
+                ProcessGesture(gesture);
+
+                // If the game has ended, break out of the loop
+                if (!gameContinues)
+                {
+                    mAnimator.SetBool("gameContinues", false);
+                    break;
+                }
+                // Send the computer's move back to Python
+                byte[] moveResponse = Encoding.ASCII.GetBytes(nextAction);
+                stream.Write(moveResponse, 0, moveResponse.Length);
             }
 
-            UpdateAction(); // Update the computer's action
-            actionTimer = 0f; // Reset the timer
+
+            yield return null;
+        }
+        mAnimator.SetBool("gameContinues", false);
+        mAnimator.Play(idleAnimation);
+        Debug.Log("Game over.");
+    }
+
+    IEnumerator StartCountdown(int seconds)
+    {
+        for (int i = seconds; i > 0; i--)
+        {
+            Debug.Log($"Revealing actions in {i} seconds...");
+            yield return new WaitForSeconds(1);
         }
     }
 
     void ProcessGesture(string gesture)
     {
-        if ((userReload == 1) && (gesture == "shoot"))
+        // check reloads regardless
+        if (nextAction == "reload")
         {
-            Debug.Log("Player wins");
-            userReload = 0;
-            computerReload = 0;
-        }
-        else if ((computerReload == 1) && (nextAction == "shoot") && gesture == "reload")
-        {
-            Debug.Log("Computer wins");
-            userReload = 0;
-            computerReload = 0;
-        }
-        else if ((userReload == 1) && (gesture == "shoot") && (nextAction == "shoot") && (computerReload == 1))
-        {
-            Debug.Log("Draw - Keep Going!");
-            userReload = 0;
-            computerReload = 0;
+            computerReload = true;
         }
         if (gesture == "reload")
         {
-            Debug.Log("Player Reload");
-            if(userReload == 1){
-                Debug.Log("Player Already Has Ammo!");
-            }
-            userReload = 1;
+            userReload = true;
         }
-        if (nextAction == "reload")
+
+
+        if (gesture == nextAction || gesture == "block" || nextAction == "block")
         {
-            Debug.Log("Computer Reload");
-            if(computerReload == 1){
-                Debug.Log("Computer Already Has Ammo!");
-            }
-            computerReload = 1;
+            Debug.Log("draw");
         }
-        if (nextAction == "shoot")
+        else if (gesture == "shoot" && nextAction == "reload")
         {
-            Debug.Log("Computer Shoots");
-            if(computerReload == 0){
-                Debug.Log("Computer Shoots Nothing - Must Reload Again!");
+            if (userReload)
+            {
+                Debug.Log("user wins");
+                gameContinues = false;
+                mAnimator.SetBool("gameContinues", false);
             }
-            computerReload = 0;
+            else
+            {
+                Debug.Log("miss!");
+            }
         }
-        if (gesture == "shoot")
+        else if (nextAction == "shoot")
         {
-            Debug.Log("Player Shoots");
-            if(computerReload == 0){
-                Debug.Log("Player Shoots Nothing - Must Reload Again!");
+            if (computerReload)
+            {
+                Debug.Log("computer wins");
+                gameContinues = false;
+                mAnimator.SetBool("gameContinues", false);
             }
-            userReload = 0;
+            else
+            {
+                Debug.Log("miss!");
+            }
+        }
+        else if (gesture == "shoot")
+        {
+            Debug.Log("user wins");
+            gameContinues = false;
+            mAnimator.SetBool("gameContinues", false);
         }
     }
-
     void UpdateAction()
     {
-        Debug.Log("Updating Action");
         int newAnimationIndex; 
         do
         {
-            newAnimationIndex = UnityEngine.Random.Range(0,actions.Length); 
-            Debug.Log("Choosing animation index");
+            newAnimationIndex = UnityEngine.Random.Range(0, actions.Length); 
         } while (newAnimationIndex == currentAction);
         currentAction = newAnimationIndex; 
-        nextAction = actions[currentAction]; 
-        Debug.Log("Current action is: " + actions[currentAction]);
+        nextAction = (string)actions[currentAction]; 
         mAnimator.Play(nextAction); 
         float animationLength = mAnimator.GetCurrentAnimatorStateInfo(0).length;
         Invoke(nameof(ReturnToIdle), animationLength);
     }
-
     void ReturnToIdle()
     {
         mAnimator.Play(idleAnimation); 
+    }
+
+    void OnDestroy()
+    {
+        stream.Close();
+        client.Close();
     }
 }
